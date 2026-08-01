@@ -22,6 +22,8 @@ if [ ! -f /var/www/html/wp-config.php ]; then
         --dbhost=mariadb \
         --allow-root
 
+    wp config set WP_REDIS_HOST redis --allow-root
+
     wp core install \
         --url="${DOMAIN_NAME}" \
         --title="Inception" \
@@ -34,6 +36,9 @@ if [ ! -f /var/www/html/wp-config.php ]; then
         --user_pass="${WP_USER_PASSWORD}" \
         --role=author \
         --allow-root
+
+    wp plugin install redis-cache --activate --allow-root
+    wp redis enable --allow-root
 
     echo "WordPress installation complete."
 else

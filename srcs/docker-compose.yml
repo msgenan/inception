@@ -37,6 +37,7 @@ services:
       - inception_network
     depends_on:
       - mariadb
+      - redis
 
   nginx:
     build: ./requirements/nginx
@@ -66,6 +67,14 @@ services:
       - inception_network
     depends_on:
       - mariadb
+
+  redis:
+    build: ./requirements/bonus/redis
+    image: redis:inception
+    container_name: redis
+    restart: on-failure
+    networks:
+      - inception_network
 
 volumes:
   mariadb_data:
