@@ -49,10 +49,23 @@ services:
       - "443:443"
     volumes:
       - wordpress_data:/var/www/html
+      - adminer_data:/var/www/adminer
     networks:
       - inception_network
     depends_on:
       - wordpress
+
+  adminer:
+    build: ./requirements/bonus/adminer
+    image: adminer:inception
+    container_name: adminer
+    restart: on-failure
+    volumes:
+      - adminer_data:/var/www/html
+    networks:
+      - inception_network
+    depends_on:
+      - mariadb
 
 volumes:
   mariadb_data:
@@ -67,6 +80,12 @@ volumes:
       type: none
       o: bind
       device: /home/mugenan/data/wordpress
+  adminer_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /home/mugenan/data/adminer
 
 networks:
   inception_network:
