@@ -76,6 +76,25 @@ services:
     networks:
       - inception_network
 
+  ftp:
+    build: ./requirements/bonus/ftp
+    image: ftp:inception
+    container_name: ftp
+    restart: on-failure
+    environment:
+      FTP_USER: ${FTP_USER}
+    secrets:
+      - ftp_password
+    ports:
+      - "21:21"
+      - "21000-21010:21000-21010"
+    volumes:
+      - wordpress_data:/var/www/html
+    networks:
+      - inception_network
+    depends_on:
+      - wordpress
+
 volumes:
   mariadb_data:
     driver: local
@@ -107,3 +126,5 @@ secrets:
     file: ../secrets/db_root_password.txt
   credentials:
     file: ../secrets/credentials.txt
+  ftp_password:
+    file: ../secrets/ftp_password.txt
