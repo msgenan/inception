@@ -47,6 +47,16 @@ Using `network: host` would remove all network isolation between the container a
 ### Docker Volumes vs Bind Mounts
 Bind mounts tie a container directly to a specific path on the host filesystem, which is fragile across environments and depends on host-specific permissions. Named volumes are managed by Docker itself and are more portable. This project uses named volumes (`mariadb_data`, `wordpress_data`) configured with a local bind-mount driver option so that their data physically lives under `/home/mugenan/data`, satisfying both the "named volume" requirement and the "data must be visible on the host" requirement.
 
+## Bonus Services
+
+In addition to the mandatory infrastructure, three bonus services were implemented, each with its own Dockerfile under `srcs/requirements/bonus/`:
+
+- **Adminer** — a lightweight, single-file database management tool, reachable at `https://mugenan.42.fr/adminer/`. It connects to the same MariaDB instance used by WordPress, giving direct visual access to the `wordpress` database without exposing MariaDB itself to the outside.
+- **Redis** — an in-memory object cache for WordPress. The `redis-cache` plugin is installed and activated automatically via WP-CLI during the WordPress container's first run, reducing database load by caching query results in memory.
+- **FTP** — a `vsftpd` server giving direct file access to the WordPress volume (`wordpress_data`), configured in passive mode with a dedicated port range (21000–21010) since the container network requires explicit passive port forwarding to work correctly through Docker.
+
+All bonus services follow the same principles as the mandatory ones: custom Dockerfiles built from `debian:bookworm`, no `latest` tags, passwords stored as Docker secrets rather than environment variables, and services running in the foreground as PID 1.
+
 ## Resources
 
 - [Docker documentation](https://docs.docker.com/)
