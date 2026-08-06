@@ -1,7 +1,9 @@
 # ********************************* SETUP ************************************ #
+
 NAME        = inception
 COMPOSE     = docker compose -f srcs/docker-compose.yml
 DATA_DIR    = /home/mugenan/data
+
 # Color codes and styles
 RESET       = \033[0m
 BOLD        = \033[1m
@@ -10,6 +12,7 @@ BLUE        = \033[34m
 CYAN        = \033[36m
 GREEN       = \033[32m
 YELLOW      = \033[33m
+
 # Message templates
 MSG_BUILD     = $(CYAN)Building and starting containers:$(RESET) $(BOLD)$(NAME)$(RESET)
 MSG_UP        = $(GREEN)Infrastructure is up.$(RESET)
@@ -19,6 +22,7 @@ MSG_FCLEAN    = $(RED)Persistent data removed.$(RESET)
 MSG_SUCCESS   = $(BLUE)$(BOLD)--- SUCCESS ---$(RESET)
 
 # ********************************* RULES ************************************ #
+
 all: up
 
 # Create host directories for named volumes
