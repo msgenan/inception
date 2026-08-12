@@ -44,6 +44,4 @@ To change a password, edit the relevant file in `secrets/` and run `make re` to 
 
 ## Checking That Services Are Running Correctly
 
-From the project root: docker compose -f srcs/docker-compose.yml ps
-All three services (`mariadb`, `wordpress`, `nginx`) should show a status of `Up`. To inspect the logs of a specific service: docker compose -f srcs/docker-compose.yml logs <service_name>
-For example, `docker compose -f srcs/docker-compose.yml logs nginx` will show whether the TLS certificate was generated successfully and whether NGINX started without errors.
+From the project root:
