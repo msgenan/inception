@@ -37,7 +37,6 @@ services:
       - inception_network
     depends_on:
       - mariadb
-      - redis
 
   nginx:
     build: ./requirements/nginx
@@ -48,46 +47,6 @@ services:
       DOMAIN_NAME: ${DOMAIN_NAME}
     ports:
       - "443:443"
-    volumes:
-      - wordpress_data:/var/www/html
-      - adminer_data:/var/www/adminer
-    networks:
-      - inception_network
-    depends_on:
-      - wordpress
-
-  adminer:
-    build: ./requirements/bonus/adminer
-    image: adminer:inception
-    container_name: adminer
-    restart: on-failure
-    volumes:
-      - adminer_data:/var/www/html
-    networks:
-      - inception_network
-    depends_on:
-      - mariadb
-
-  redis:
-    build: ./requirements/bonus/redis
-    image: redis:inception
-    container_name: redis
-    restart: on-failure
-    networks:
-      - inception_network
-
-  ftp:
-    build: ./requirements/bonus/ftp
-    image: ftp:inception
-    container_name: ftp
-    restart: on-failure
-    environment:
-      FTP_USER: ${FTP_USER}
-    secrets:
-      - ftp_password
-    ports:
-      - "21:21"
-      - "21000-21010:21000-21010"
     volumes:
       - wordpress_data:/var/www/html
     networks:
@@ -108,12 +67,6 @@ volumes:
       type: none
       o: bind
       device: /home/mugenan/data/wordpress
-  adminer_data:
-    driver: local
-    driver_opts:
-      type: none
-      o: bind
-      device: /home/mugenan/data/adminer
 
 networks:
   inception_network:
@@ -126,5 +79,3 @@ secrets:
     file: ../secrets/db_root_password.txt
   credentials:
     file: ../secrets/credentials.txt
-  ftp_password:
-    file: ../secrets/ftp_password.txt
