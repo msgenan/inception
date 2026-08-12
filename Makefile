@@ -32,7 +32,10 @@ $(DATA_DIR)/mariadb:
 $(DATA_DIR)/wordpress:
 	@mkdir -p $(DATA_DIR)/wordpress
 
-up: $(DATA_DIR)/mariadb $(DATA_DIR)/wordpress
+$(DATA_DIR)/adminer:
+	@mkdir -p $(DATA_DIR)/adminer
+
+up: $(DATA_DIR)/mariadb $(DATA_DIR)/wordpress $(DATA_DIR)/adminer
 	@echo "$(MSG_BUILD)"
 	@$(COMPOSE) up -d --build
 	@echo "\n$(MSG_SUCCESS)"
@@ -58,6 +61,7 @@ fclean: clean
 	@sudo rm -rf $(DATA_DIR)/mariadb/*
 	@sudo rm -rf $(DATA_DIR)/wordpress/*
 	@echo "$(MSG_FCLEAN)\n"
+	@sudo rm -rf $(DATA_DIR)/adminer/*
 
 re: fclean all
 
