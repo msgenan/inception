@@ -45,3 +45,45 @@ To change a password, edit the relevant file in `secrets/` and run `make re` to 
 ## Checking That Services Are Running Correctly
 
 From the project root:
+
+```bash
+docker compose -f srcs/docker-compose.yml ps
+```
+
+All three containers (`nginx`, `wordpress`, `mariadb`) should show a state of `Up` (or `running`). If a container is missing or keeps restarting, inspect its logs:
+
+```bash
+docker compose -f srcs/docker-compose.yml logs nginx
+docker compose -f srcs/docker-compose.yml logs wordpress
+docker compose -f srcs/docker-compose.yml logs mariadb
+```
+
+You can also verify each layer of the stack individually:
+
+- **NGINX / TLS** — check that the site responds over HTTPS (the `-k` flag skips verification of the self-signed certificate):
+
+  ```bash
+  curl -k -I https://mugenan.42.fr
+  ```
+
+  A healthy response returns `HTTP/2 200` (or a `301`/`302` redirect to the WordPress front page). Also confirm that plain HTTP is **not** served: `curl -I http://mugenan.42.fr` should fail to connect, since only port 443 is exposed.
+
+- **WordPress** — open `https://mugenan.42.fr` in a browser and confirm the site loads without the WordPress installation wizard appearing (the wizard means auto-installation failed). Logging in at `/wp-admin` with the admin credentials confirms PHP-FPM and the database connection are working.
+
+- **MariaDB** — confirm the database is reachable and populated from inside the container:
+
+  ```bash
+  docker exec -it mariadb mariadb -u root -p"$(cat secrets/db_root_password.txt)" \
+    -e "SHOW DATABASES; USE wordpress; SHOW TABLES;"
+  ```
+
+  You should see the `wordpress` database with its `wp_*` tables listed.
+
+- **Data persistence** — verify that the named volumes are populated on the host:
+
+  ```bash
+  ls /home/mugenan/data/mariadb
+  ls /home/mugenan/data/wordpress
+  ```
+
+  Both directories should contain files. As a final test, run `make down` followed by `make` and confirm the site comes back with all its content intact.
