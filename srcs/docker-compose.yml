@@ -14,6 +14,12 @@ services:
       - mariadb_data:/var/lib/mysql
     networks:
       - inception_network
+    healthcheck:
+      test: ["CMD", "mariadb-admin", "ping", "-h", "127.0.0.1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
 
   wordpress:
     build: ./requirements/wordpress
@@ -36,7 +42,8 @@ services:
     networks:
       - inception_network
     depends_on:
-      - mariadb
+      mariadb:
+        condition: service_healthy
 
   nginx:
     build: ./requirements/nginx

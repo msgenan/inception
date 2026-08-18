@@ -59,8 +59,7 @@ WP_USER_PASSWORD=<password>
 
 Also add `<your_username>.42.fr` to `/etc/hosts` on the machine you'll browse from, pointing to the VM's IP (or `127.0.0.1` if using NAT port forwarding on port 443).
 
-A helper script, `setup_secrets.sh`, is provided outside the repository (in the home directory) to automatically generate all of the above with randomly generated passwords. Run it after fetching the repository:
-~/setup_secrets.sh
+All of the above files must be created by hand after cloning; they are intentionally kept out of version control so that no credential ever reaches the repository.
 
 ## Building and Launching the Project
 
@@ -70,6 +69,8 @@ make
 This target creates the host directories for the named volumes (if missing) and runs `docker compose -f srcs/docker-compose.yml up -d --build`, which builds all three custom images (`mariadb:inception`, `wordpress:inception`, `nginx:inception`) and starts the containers.
 
 Each service's Dockerfile builds from `debian:bookworm` and installs only the packages required for that service (no ready-made application images are pulled). Each container's entrypoint script implements a "first run vs. subsequent run" pattern: on first start it initializes its data (database creation, WordPress installation, TLS certificate generation), and on subsequent restarts it skips initialization and directly launches the service in the foreground as PID 1 (`exec mariadbd`, `exec php-fpm8.2 -F`, `exec nginx -g "daemon off;"`), which is required for Docker's `restart: on-failure` policy to work correctly.
+
+Startup ordering is handled by Docker itself rather than by a wait loop in a script: the `mariadb` service declares a `healthcheck` that runs `mariadb-admin ping -h 127.0.0.1` inside its own container, and `wordpress` declares `depends_on: mariadb: condition: service_healthy`. Compose therefore does not start the WordPress container until MariaDB is accepting TCP connections on port 3306. The check deliberately targets `127.0.0.1` (TCP) rather than the Unix socket, so that the temporary `--skip-networking` server used during MariaDB's first-run initialization is not mistaken for a ready database.
 
 ## Managing Containers and Volumes
 
@@ -82,7 +83,7 @@ Each service's Dockerfile builds from `debian:bookworm` and installs only the pa
 | `docker volume inspect srcs_mariadb_data` | Inspect a volume's configuration (mountpoint, bind options) |
 | `make down` | Stop and remove containers (volumes persist) |
 | `make stop` / `make start` | Stop/start containers without removing them |
-| `make fclean` | Remove containers and delete all persistent data |
+| `make fclean` | Remove containers, this project's images/volumes, and delete all persistent host data |
 | `make re` | Full reset: `fclean` followed by `all` |
 
 To rebuild a single service after modifying its Dockerfile or scripts:
@@ -92,7 +93,11 @@ docker compose -f srcs/docker-compose.yml up -d <service>
 
 ### Changing a Service's Port
 
-Changing a service's port requires updating every place that service's port is referenced, not just the `EXPOSE` line in its Dockerfile (which is documentation-only and has no functional effect). For example, changing NGINX's port requires updating `listen` in `nginx.conf` **and** the `ports:` mapping in `docker-compose.yml`. Changing MariaDB's port requires updating `port` in `my.cnf` **and** every place WordPress's init script references MariaDB's host/port (both the readiness check and `wp config create --dbhost`). After any such change, rebuild the affected services and restart.
+Changing a service's port requires updating every place that service's port is referenced, not just the `EXPOSE` line in its Dockerfile (which is documentation-only and has no functional effect). For example, changing NGINX's port requires updating `listen` in `nginx.conf` **and** the `ports:` mapping in `docker-compose.yml`. Changing MariaDB's port requires updating `port` in `my.cnf`, the `--dbhost` value passed to `wp config create` in `init_wp.sh`, and the `mariadb-admin ping` healthcheck in `docker-compose.yml`. After any such change, rebuild the affected services and restart.
+
+### Changing the Domain Name
+
+The domain is intentionally hardcoded rather than templated, since it never changes at runtime. If it ever needs to change, two files must be edited together: `server_name` in [nginx.conf](srcs/requirements/nginx/conf/nginx.conf) and `DOMAIN_NAME` in `srcs/.env` (which drives the TLS certificate's `CN` and WordPress's `siteurl`). Both require a rebuild (`make re`, since the TLS cert and `wp core install --url` are only generated on first run).
 
 ## Where Project Data Is Stored and How It Persists
 

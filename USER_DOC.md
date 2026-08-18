@@ -19,7 +19,7 @@ From the project root directory:
 | `make start` | Restarts previously stopped containers |
 | `make down` | Stops and removes all containers and the network (data is preserved) |
 | `make restart` | Equivalent to `make down` followed by `make` |
-| `make clean` | Stops everything and removes unused Docker images/cache |
+| `make clean` | Stops everything and removes this project's Docker images and volumes (does not touch other images/containers on the host) |
 | `make fclean` | `make clean` plus deletion of all persistent data (database and WordPress files) |
 | `make re` | `make fclean` followed by `make` — a full reset |
 

@@ -17,7 +17,7 @@ YELLOW      = \033[33m
 MSG_BUILD     = $(CYAN)Building and starting containers:$(RESET) $(BOLD)$(NAME)$(RESET)
 MSG_UP        = $(GREEN)Infrastructure is up.$(RESET)
 MSG_DOWN      = $(YELLOW)Containers stopped and removed.$(RESET)
-MSG_CLEAN     = $(YELLOW)Docker system pruned.$(RESET)
+MSG_CLEAN     = $(YELLOW)Project images and volumes removed.$(RESET)
 MSG_FCLEAN    = $(RED)Persistent data removed.$(RESET)
 MSG_SUCCESS   = $(BLUE)$(BOLD)--- SUCCESS ---$(RESET)
 
@@ -51,7 +51,7 @@ start:
 restart: down up
 
 clean: down
-	@docker system prune -af
+	@$(COMPOSE) down --rmi all --volumes
 	@echo "$(MSG_CLEAN)\n"
 
 fclean: clean

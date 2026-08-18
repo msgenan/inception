@@ -1,21 +1,18 @@
 #!/bin/bash
 set -e
+set -o pipefail
 
-DB_PASSWORD=$(cat /run/secrets/db_password)
-WP_ADMIN_PASSWORD=$(grep WP_ADMIN_PASSWORD /run/secrets/credentials | cut -d '=' -f2)
-WP_USER_PASSWORD=$(grep WP_USER_PASSWORD /run/secrets/credentials | cut -d '=' -f2)
+DB_PASSWORD=$(cat /run/secrets/db_password | tr -d '\r')
+WP_ADMIN_PASSWORD=$(grep WP_ADMIN_PASSWORD /run/secrets/credentials | cut -d '=' -f2- | tr -d '\r')
+WP_USER_PASSWORD=$(grep WP_USER_PASSWORD /run/secrets/credentials | cut -d '=' -f2- | tr -d '\r')
 
-until mariadb-admin ping -h mariadb -u"${MYSQL_USER}" -p"${DB_PASSWORD}" --silent 2>/dev/null; do
-    echo "Waiting for database connection..."
-    sleep 2
-done
-
-if [ ! -f /var/www/html/wp-config.php ]; then
+if ! wp core is-installed --allow-root 2>/dev/null; then
     echo "First run: installing WordPress..."
 
-    wp core download --allow-root
+    wp core download --force --allow-root
 
     wp config create \
+        --force \
         --dbname="${MYSQL_DATABASE}" \
         --dbuser="${MYSQL_USER}" \
         --dbpass="${DB_PASSWORD}" \
@@ -23,7 +20,7 @@ if [ ! -f /var/www/html/wp-config.php ]; then
         --allow-root
 
     wp core install \
-        --url="${DOMAIN_NAME}" \
+        --url="https://${DOMAIN_NAME}" \
         --title="Inception" \
         --admin_user="${WP_ADMIN_USER}" \
         --admin_password="${WP_ADMIN_PASSWORD}" \
